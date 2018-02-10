@@ -3,15 +3,17 @@ import os
 import warnings
 
 from PyQt5.QtCore import (
-    QSize, QTimer, QPointF, Qt, QLineF, QByteArray, QBuffer, QIODevice
+    QSize, QTimer, Qt, QByteArray, QBuffer, QIODevice
 )
 from PyQt5.QtGui import (
-    QPainter, QPalette, QPen, QColor, QBrush
+    QPalette, QColor
 )
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QSizePolicy, QApplication, QPushButton, QFileDialog,
     QMessageBox, QProgressDialog
 )
+
+from anistate import AniState
 
 try:
     import imageio
@@ -90,27 +92,12 @@ class CanvasWidget(QWidget):
         ).exec()
 
     def paintEvent(self, *args):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        if CENTER:
-            painter.translate(self.width() / 2, self.height() / 2)
-
-        # Some simple demonstration
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(QColor(0, 255, 0, 32)))
-        painter.drawEllipse(QPointF(self.width() / 2, self.height() / 2),
-                            self.frame_no,
-                            self.frame_no)
-
-        painter.setPen(QPen(QColor(0, 0, 255, 64), 5))
-        painter.drawLine(QLineF(0, 0, self.width(), self.height()))
-        painter.drawLine(QLineF(0, self.height(), self.width(), 0))
-
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(QColor(255, 0, 0, 64)))
-        painter.drawEllipse(QPointF(self.width() / 2, self.height() / 2),
-                            self.width() / 2 - self.frame_no,
-                            self.height() / 2 - self.frame_no)
+        (AniState(self)
+         .size(5)
+         .color((0, 0, 255, 64)).line(0, 0, self.width(), self.height())
+         .color((0, 255, 0, 64)).line(0, self.height(), self.width(), 0)
+         .size(self.frame_no)
+         .color((255, 0, 0, 64)).point(self.width() / 2, self.height() / 2))
 
 
 class Animake(QWidget):
