@@ -76,6 +76,20 @@ class CanvasWidget(QWidget):
         progress_box.setWindowModality(Qt.WindowModal)
         with imageio.get_writer(location, format='mp4', mode='I',
                                 fps=FPS, quality=6) as writer:
+            frame = 0
+
+            def new_event(*args):
+                nonlocal frame
+                self.callback(AniState(self,
+                                       frame=frame,
+                                       time=frame / FPS,
+                                       dt=1 / FPS))
+                frame += 1
+                pass
+
+            old = self.paintEvent
+            self.paintEvent = new_event
+
             self.frame_no = 1
             for i in range(frame_count):
                 progress_box.setValue(i)
@@ -89,7 +103,9 @@ class CanvasWidget(QWidget):
                 self.grab().save(buf, 'PNG', 100)  # Triggers paintEvent
                 self.frame_no += 1
                 writer.append_data(imageio.imread(im_bytes.data(), 'png'))
+
         progress_box.setValue(progress_box.maximum())
+        self.paintEvent = old
 
         return QMessageBox(
             QMessageBox.Information, 'Completed',
