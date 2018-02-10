@@ -49,9 +49,9 @@ class AniState:
         if value is None:
             self._painter.setBrush(Qt.NoBrush)
         elif isinstance(value, tuple):
-            self._painter.setBrush(QBrush(*value))
+            self._painter.setBrush(QBrush(QColor(*value)))
         elif isinstance(value, (str, int)):
-            self._painter.setBrush(QBrush(value))
+            self._painter.setBrush(QBrush(QColor(value)))
         elif isinstance(value, QColor):
             self._painter.setBrush(QBrush(value))
         elif isinstance(value, QBrush):
