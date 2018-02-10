@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import importlib
 import os
+import sys
 import warnings
 
 from PyQt5.QtCore import (
@@ -36,7 +38,8 @@ class CanvasWidget(QWidget):
         self.setPalette(pal)
         self.setAutoFillBackground(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.frame_no = 1
+        self.frame_no = 0
+        self.callback = lambda a: None
 
     def minimumSizeHint(self):
         return QSize(50, 50)
@@ -92,13 +95,7 @@ class CanvasWidget(QWidget):
         ).exec()
 
     def paintEvent(self, *args):
-        ani = AniState(self, self.frame_no)
-        (ani
-         .size(5)
-         .color((0, 0, 255, 64)).line(0, 0, ani.width, ani.height)
-         .color((0, 255, 0, 64)).line(0, ani.height, ani.width, 0)
-         .size(ani.frame)
-         .color((255, 0, 0, 64)).point(ani.width / 2, ani.height / 2))
+        self.callback(AniState(self, self.frame_no))
 
 
 class Animake(QWidget):
@@ -119,12 +116,21 @@ class Animake(QWidget):
         self.canvas.timer.start(int((1000 + FPS - 1) / FPS))
 
 
-def main():
+def main(args):
     app = QApplication([])
     win = Animake()
+
+    if args:
+        mod = args[0]
+        if not mod.startswith('scenes.'):
+            mod = 'scenes.' + mod
+    else:
+        mod = 'scenes.example'
+
+    win.canvas.callback = importlib.import_module(mod).callback
     win.show()
     return app.exec()
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

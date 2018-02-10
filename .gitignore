@@ -1,3 +1,8 @@
+# User scenes
+scenes/*.py
+!scenes/__init__.py
+!scenes/example.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
