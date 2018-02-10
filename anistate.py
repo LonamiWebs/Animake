@@ -9,7 +9,7 @@ from PyQt5.QtGui import (
 
 class AniState:
     """Wrapper class around QPainter to ease its usage."""
-    def __init__(self, widget, frame, center=False):
+    def __init__(self, widget, frame, time, dt, center=False):
         self._painter = QPainter(widget)
         self._painter.setRenderHint(QPainter.Antialiasing, True)
         if center:
@@ -18,6 +18,8 @@ class AniState:
         self.width = widget.width()
         self.height = widget.height()
         self.frame = frame
+        self.time = time
+        self.dt = dt
 
     def color(self, value):
         """

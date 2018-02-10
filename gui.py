@@ -2,6 +2,7 @@
 import importlib
 import os
 import sys
+import time
 import warnings
 
 from PyQt5.QtCore import (
@@ -40,6 +41,7 @@ class CanvasWidget(QWidget):
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.frame_no = 0
         self.callback = lambda a: None
+        self.start_time = self.last_time = time.time()
 
     def minimumSizeHint(self):
         return QSize(50, 50)
@@ -95,7 +97,12 @@ class CanvasWidget(QWidget):
         ).exec()
 
     def paintEvent(self, *args):
-        self.callback(AniState(self, self.frame_no))
+        now = time.time()
+        self.callback(AniState(self,
+                               frame=self.frame_no,
+                               time=now - self.start_time,
+                               dt=now - self.last_time))
+        self.last_time = now
 
 
 class Animake(QWidget):
