@@ -9,14 +9,15 @@ from PyQt5.QtGui import (
 
 class AniState:
     """Wrapper class around QPainter to ease its usage."""
-    def __init__(self, widget, center=False):
+    def __init__(self, widget, frame, center=False):
         self._painter = QPainter(widget)
         self._painter.setRenderHint(QPainter.Antialiasing, True)
         if center:
             self._painter.translate(widget.width() / 2, widget.height() / 2)
 
-        self.width = widget.width
-        self.height = widget.height
+        self.width = widget.width()
+        self.height = widget.height()
+        self.frame = frame
 
     def color(self, value):
         """

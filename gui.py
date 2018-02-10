@@ -92,12 +92,13 @@ class CanvasWidget(QWidget):
         ).exec()
 
     def paintEvent(self, *args):
-        (AniState(self)
+        ani = AniState(self, self.frame_no)
+        (ani
          .size(5)
-         .color((0, 0, 255, 64)).line(0, 0, self.width(), self.height())
-         .color((0, 255, 0, 64)).line(0, self.height(), self.width(), 0)
-         .size(self.frame_no)
-         .color((255, 0, 0, 64)).point(self.width() / 2, self.height() / 2))
+         .color((0, 0, 255, 64)).line(0, 0, ani.width, ani.height)
+         .color((0, 255, 0, 64)).line(0, ani.height, ani.width, 0)
+         .size(ani.frame)
+         .color((255, 0, 0, 64)).point(ani.width / 2, ani.height / 2))
 
 
 class Animake(QWidget):
