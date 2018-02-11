@@ -45,6 +45,7 @@ class CanvasWidget(QWidget):
         self.setPalette(pal)
         self.setAutoFillBackground(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.start = lambda: None
         self.callback = lambda a: None
         self.duration = DURATION
 
@@ -54,6 +55,7 @@ class CanvasWidget(QWidget):
     def restart(self):
         self.frame_no = 0
         self.start_time = self.last_time = time.time()
+        self.start()
 
     def minimumSizeHint(self):
         return QSize(50, 50)
@@ -107,6 +109,7 @@ class CanvasWidget(QWidget):
             old = self.paintEvent
             self.paintEvent = new_event
 
+            self.start()
             self.frame_no = 0
             for i in range(frame_count):
                 progress_box.setValue(i)
@@ -177,6 +180,8 @@ class ModLoader(watchdog.events.FileSystemEventHandler):
                 warnings.warn('Failed to hot reload %s:\n%s' % (self.name, e))
 
     def mod_updated(self):
+        if hasattr(self.mod, 'start'):
+            self.canvas.start = self.mod.start
         self.canvas.callback = self.mod.callback
         self.canvas.duration = getattr(self.mod, 'DURATION', DURATION)
         if not self.canvas.duration:

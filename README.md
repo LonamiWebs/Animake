@@ -22,3 +22,6 @@ If the module defines a `DURATION` constant, after that period of time,
 the scene will be restarted. To stop the scene earlier, you should
 `raise StopIteration` (which will restart it). You can also set the
 duration to `None` or `0` to represent infinite.
+
+If the module defines a `start()` callback, it will be called every time
+the simulation is restarted, before any call to `callback` occurs.

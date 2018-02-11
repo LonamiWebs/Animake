@@ -35,12 +35,14 @@ ball = None
 size = 0
 
 
+def start():
+    global size, ball
+    size = 0
+    ball = Ball()
+
+
 def callback(ani: AniState):
     global size, ball
-    if ani.frame == 1:
-        size = 0
-        ball = Ball()
-
     (ani
      .size(5)
      .color((0, 0, 255, 64)).line(0, 0, ani.width, ani.height)
