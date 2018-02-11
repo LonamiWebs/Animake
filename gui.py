@@ -24,6 +24,12 @@ except ImportError:
     imageio = None
     warnings.warn('Export as video feature disabled, imageio module missing')
 
+try:
+    import watchdog.observers
+    import watchdog.events
+except ImportError:
+    watchdog = None
+    warnings.warn('Hot reload feature disabled, watchdog module missing')
 
 FPS = 60  # Frames Per Second at which to render the animation
 DURATION = 60  # In seconds
@@ -155,6 +161,29 @@ class Animake(QWidget):
         self.canvas.timer.start(int((1000 + FPS - 1) / FPS))
 
 
+class ModLoader(watchdog.events.FileSystemEventHandler):
+    def __init__(self, canvas, name):
+        self.canvas = canvas
+        self.filename = name.replace('.', '/') + '.py'
+        self.mod = importlib.import_module(name)
+        self.mod_updated()
+
+    def on_modified(self, event):
+        if event.src_path == self.filename:
+            try:
+                importlib.reload(self.mod)
+                self.mod_updated()
+            except Exception as e:
+                warnings.warn('Failed to hot reload %s:\n%s' % (self.name, e))
+
+    def mod_updated(self):
+        self.canvas.callback = self.mod.callback
+        self.canvas.stop_time = getattr(self.mod, 'DURATION', DURATION)
+        if not self.canvas.stop_time:
+            self.canvas.stop_time = float('inf')
+        self.canvas.restart()
+
+
 def main(args):
     app = QApplication([])
     win = Animake()
@@ -166,14 +195,21 @@ def main(args):
     else:
         mod = 'scenes.example'
 
-    mod = importlib.import_module(mod)
-    win.canvas.callback = mod.callback
-    win.canvas.stop_time = getattr(mod, 'DURATION', DURATION)
-    if not win.canvas.stop_time:
-        win.canvas.stop_time = float('inf')
+    loader = ModLoader(win.canvas, mod)
+    if watchdog:
+        observer = watchdog.observers.Observer()
+        observer.schedule(loader, 'scenes/')
+        observer.start()
+    else:
+        observer = None
 
     win.show()
-    return app.exec()
+    ret_val = app.exec()
+    if observer:
+        observer.stop()
+        observer.join()
+
+    return ret_val
 
 
 if __name__ == '__main__':
