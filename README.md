@@ -17,3 +17,8 @@ accepts a single `AniState` parameter, like so:
 def callback(ani):
     pass  # Use the input 'AniState' at will
 ```
+
+If the module defines a `DURATION` constant, after that period of time,
+the scene will be restarted. To stop the scene earlier, you should
+`raise StopIteration` (which will restart it). You can also set the
+duration to `None` or `0` to represent infinite.

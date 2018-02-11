@@ -26,7 +26,7 @@ except ImportError:
 
 
 FPS = 60  # Frames Per Second at which to render the animation
-DURATION = 5  # In seconds
+DURATION = 60  # In seconds
 CENTER = False  # Should everything be translated to the center?
 BACKGROUND = QColor('#fff')
 
@@ -39,8 +39,14 @@ class CanvasWidget(QWidget):
         self.setPalette(pal)
         self.setAutoFillBackground(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.frame_no = 0
         self.callback = lambda a: None
+        self.stop_time = DURATION
+
+        self.frame_no = self.start_time = self.last_time = None
+        self.restart()
+
+    def restart(self):
+        self.frame_no = 0
         self.start_time = self.last_time = time.time()
 
     def minimumSizeHint(self):
@@ -52,6 +58,8 @@ class CanvasWidget(QWidget):
     def next_animation_frame(self):
         self.update()
         self.frame_no += 1
+        if time.time() - self.start_time > self.stop_time:
+            self.restart()
 
     def export_video(self):
         if not imageio:
@@ -77,20 +85,23 @@ class CanvasWidget(QWidget):
         with imageio.get_writer(location, format='mp4', mode='I',
                                 fps=FPS, quality=6) as writer:
             frame = 0
+            stopped = False
 
             def new_event(*args):
-                nonlocal frame
-                self.callback(AniState(self,
-                                       frame=frame,
-                                       time=frame / FPS,
-                                       dt=1 / FPS))
-                frame += 1
-                pass
+                nonlocal frame, stopped
+                try:
+                    self.callback(AniState(self,
+                                           frame=frame,
+                                           time=frame / FPS,
+                                           dt=1 / FPS))
+                    frame += 1
+                except StopIteration:
+                    stopped = True
 
             old = self.paintEvent
             self.paintEvent = new_event
 
-            self.frame_no = 1
+            self.frame_no = 0
             for i in range(frame_count):
                 progress_box.setValue(i)
                 if progress_box.wasCanceled():
@@ -103,6 +114,8 @@ class CanvasWidget(QWidget):
                 self.grab().save(buf, 'PNG', 100)  # Triggers paintEvent
                 self.frame_no += 1
                 writer.append_data(imageio.imread(im_bytes.data(), 'png'))
+                if stopped:
+                    break
 
         progress_box.setValue(progress_box.maximum())
         self.paintEvent = old
@@ -114,11 +127,14 @@ class CanvasWidget(QWidget):
 
     def paintEvent(self, *args):
         now = time.time()
-        self.callback(AniState(self,
-                               frame=self.frame_no,
-                               time=now - self.start_time,
-                               dt=now - self.last_time))
-        self.last_time = now
+        try:
+            self.callback(AniState(self,
+                                   frame=self.frame_no,
+                                   time=now - self.start_time,
+                                   dt=now - self.last_time))
+            self.last_time = now
+        except StopIteration:
+            self.restart()
 
 
 class Animake(QWidget):
@@ -150,7 +166,12 @@ def main(args):
     else:
         mod = 'scenes.example'
 
-    win.canvas.callback = importlib.import_module(mod).callback
+    mod = importlib.import_module(mod)
+    win.canvas.callback = mod.callback
+    win.canvas.stop_time = getattr(mod, 'DURATION', DURATION)
+    if not win.canvas.stop_time:
+        win.canvas.stop_time = float('inf')
+
     win.show()
     return app.exec()
 
