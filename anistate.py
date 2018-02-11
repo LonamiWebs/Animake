@@ -147,3 +147,13 @@ class AniState:
     def circle(self, x, y, radius):
         """Draws a centered circle at the given position and radius."""
         self._painter.drawEllipse(QPointF(x, y), radius, radius)
+
+    def poly(self, values):
+        """Draws a filled polygon with the shape of the input values."""
+        assert len(values) % 2 == 0
+        if isinstance(values[0], (tuple, list)):
+            self._painter.drawPolygon(*[QPointF(x, y) for x, y, in values])
+        else:
+            self._painter.drawPolygon(*[QPointF(values[i], values[i + 1])
+                                        for i in range(0, len(values), 2)])
+        return self
