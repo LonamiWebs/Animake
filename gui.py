@@ -46,7 +46,7 @@ class CanvasWidget(QWidget):
         self.setAutoFillBackground(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.callback = lambda a: None
-        self.stop_time = DURATION
+        self.duration = DURATION
 
         self.frame_no = self.start_time = self.last_time = None
         self.restart()
@@ -64,7 +64,7 @@ class CanvasWidget(QWidget):
     def next_animation_frame(self):
         self.update()
         self.frame_no += 1
-        if time.time() - self.start_time > self.stop_time:
+        if time.time() - self.start_time > self.duration:
             self.restart()
 
     def export_video(self):
@@ -83,7 +83,7 @@ class CanvasWidget(QWidget):
         if not location.endswith('.mp4'):
             location += '.mp4'
 
-        frame_count = int(DURATION * FPS)
+        frame_count = int(self.duration * FPS)
         progress_box = QProgressDialog(
             'Recording and exporting video...', 'Cancel', 1, frame_count, self
         )
@@ -178,9 +178,9 @@ class ModLoader(watchdog.events.FileSystemEventHandler):
 
     def mod_updated(self):
         self.canvas.callback = self.mod.callback
-        self.canvas.stop_time = getattr(self.mod, 'DURATION', DURATION)
-        if not self.canvas.stop_time:
-            self.canvas.stop_time = float('inf')
+        self.canvas.duration = getattr(self.mod, 'DURATION', DURATION)
+        if not self.canvas.duration:
+            self.canvas.duration = float('inf')
         self.canvas.restart()
 
 
